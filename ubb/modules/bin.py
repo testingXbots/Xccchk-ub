@@ -6,6 +6,7 @@ from ubb.func import http
 
 @Ubot.on(events.NewMessage(pattern=r'\.bin'))
 async def srbin(event):
+    await asyncio.sleep(10)
     BIN = event.message.message[len('.bin '):]
     reply_msg = await event.get_reply_message()
     if reply_msg:
@@ -19,7 +20,7 @@ async def srbin(event):
         msg = await event.reply('Processing...')
 
         # Wait for a very short duration before checking if the message still exists
-        await asyncio.sleep(2)  # Adjust this value as needed
+        await asyncio.sleep(10)  # Adjust this value as needed
 
         # Check if the message still exists in the channel
         try:
