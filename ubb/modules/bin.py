@@ -6,7 +6,6 @@ from ubb.func import http
 
 @Ubot.on(events.NewMessage(pattern=r'\.bin'))
 async def srbin(event):
-    await asyncio.sleep(6)
     BIN = event.message.message[len('.bin '):]
     reply_msg = await event.get_reply_message()
     if reply_msg:
@@ -15,18 +14,21 @@ async def srbin(event):
         _BIN = re.sub(r'[^0-9]', '', BIN)
         _res = await http.get(f'http://binchk-api.vercel.app/bin={_BIN}')
         res = _res.json()
-        
-        # Get the message's unique ID
-        msg_id = event.message.id
-        
-        # Retrieve the message using its ID
-        messages = await event.client.get_messages(event.input_chat, ids=[msg_id])
-        
+
+        # Post the message and get the message object
+        msg = await event.reply('Processing...')
+
+        # Wait for 4 seconds before checking if the message still exists
+        await asyncio.sleep(4)
+
+        # Get the message using its ID
+        updated_msg = await event.client.get_messages(event.input_chat, ids=[msg.id])
+
         # If the message doesn't exist anymore, return without processing
-        if not messages:
+        if not updated_msg:
             return
-        
-        msg = f'''
+
+        new_msg = f'''
 BIN: `{_BIN}`
 Brand⇢ **{res["brand"]}**
 Type⇢ **{res["type"]}**
@@ -37,10 +39,8 @@ Flag⇢ **{res["flag"]}**
 Currency⇢ **{res["currency"]}**
 Country⇢ **{res["country"]}({res["code"]})**
 '''
-        
-        # Wait for 4 seconds before editing the message
-        await asyncio.sleep(4)
-        
-        await event.edit(msg)
+
+        # Edit the message with the new content
+        await msg.edit(new_msg)
     except:
-        await event.edit('Failed to parse bin data from api')
+        await msg.edit('Failed to parse bin data from api')
