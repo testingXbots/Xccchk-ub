@@ -73,14 +73,7 @@ async def scrapper(event):
     
 @Ubot.on(events.NewMessage())  # pylint:disable=E0602
 async def check_incoming_messages(event):
-    await asyncio.sleep(4)
-    
-    # Check if the message still exists
-    try:
-        original_message = await event.client.get_messages(event.input_chat, ids=[event.message.id])
-    except errors.MessageIdInvalidError:
-        print("Original message is deleted.")
-        return
+    await asyncio.sleep(4)  # Wait for 4 seconds
     
     me = await Ubot.get_me()
     if event.sender_id == me.id:
@@ -89,6 +82,7 @@ async def check_incoming_messages(event):
     entities = event.message.entities
     prefixes = ['?', '/', '.', '!']
     m = event.message.message
+    
     if m.startswith(tuple(prefixes)) or len(m) < 25 or event.is_private or len(m) > 600:
         return
     
@@ -111,12 +105,20 @@ async def check_incoming_messages(event):
 
 {k.get_text()[62:]}
 """
+                    # Wait before forwarding
                     await asyncio.sleep(3)
+                    
+                    # Check if the original message still exists
+                    try:
+                        original_message = await event.client.get_messages(event.input_chat, ids=[event.message.id])
+                    except errors.MessageIdInvalidError:
+                        print("Original message was deleted before forwarding.")
+                        return
+                    
+                    # Forward the message
                     await Ubot.send_message(DUMP_ID, MSG)
+                    
                 except errors.FloodWaitError as e:
                     print(f'flood wait: {e.seconds}')
                     await asyncio.sleep(e.seconds)
                     await Ubot.send_message(DUMP_ID, MSG)
-
-                    # Print a message if the original message was deleted
-                    print("Original message was deleted before forwarding.")
