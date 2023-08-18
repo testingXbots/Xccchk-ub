@@ -8,7 +8,7 @@ from ubb import Ubot
 
 @Ubot.on(events.NewMessage(pattern=r'\.bin'))
 async def srbin(event):
-    await asyncio.sleep(3)
+    await asyncio.sleep(6)
     BIN = event.message.message[len('.bin '):]
     reply_msg = await event.get_reply_message()
     if reply_msg:
