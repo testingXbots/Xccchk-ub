@@ -6,11 +6,12 @@ from ubb.func import http
 
 @Ubot.on(events.NewMessage(pattern=r'\.bin'))
 async def srbin(event):
-    await asyncio.sleep(10)
+    cancelled = False  # Flag to track if the message was deleted
     BIN = event.message.message[len('.bin '):]
     reply_msg = await event.get_reply_message()
     if reply_msg:
         BIN = reply_msg.message
+
     try:
         _BIN = re.sub(r'[^0-9]', '', BIN)
         _res = await http.get(f'http://binchk-api.vercel.app/bin={_BIN}')
@@ -26,10 +27,10 @@ async def srbin(event):
         try:
             await event.client.get_messages(event.input_chat, ids=[msg.id])
         except:
-            await msg.edit("Original message was deleted, no further action needed.")
-            return
+            cancelled = True  # Mark the message as cancelled
 
-        new_msg = f'''
+        if not cancelled:
+            new_msg = f'''
 BIN: `{_BIN}`
 Brand⇢ **{res["brand"]}**
 Type⇢ **{res["type"]}**
@@ -41,7 +42,8 @@ Currency⇢ **{res["currency"]}**
 Country⇢ **{res["country"]}({res["code"]})**
 '''
 
-        # Edit the message with the new content
-        await msg.edit(new_msg)
+            # Edit the message with the new content
+            await msg.edit(new_msg)
     except:
-        await msg.edit('Failed to parse bin data from api')
+        if not cancelled:
+            await msg.edit('Failed to parse bin data from api')
