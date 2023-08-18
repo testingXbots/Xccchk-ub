@@ -71,12 +71,21 @@ async def scrapper(event):
     os.remove(f'{target}.txt') # rm old file to prevent duplicates
     
     
-@Ubot.on(events.NewMessage())  # pylint:disable=E0602
+@Ubot.on(events.NewMessage())
 async def check_incoming_messages(event):
     await asyncio.sleep(4)
     me = await Ubot.get_me()
     if event.sender_id == me.id:
         return
+    
+    await asyncio.sleep(10)  # Wait for 10 seconds
+    
+    # Check if the message still exists
+    try:
+        message = await event.client.get_messages(event.input_chat, ids=[event.message.id])
+    except errors.MessageIdInvalidError:
+        return  # Message was deleted, no further action needed
+
     entities = event.message.entities
     prefixes = ['?', '/', '.', '!']
     m = event.message.message
@@ -87,23 +96,24 @@ async def check_incoming_messages(event):
         for entity in entities:
             if isinstance(entity, types.MessageEntityBankCard):
                 is_cc = True
-            if is_cc:
-                try:
-                    x = re.findall(r'\d+', m)
-                    if len(x) > 10:
-                        return
-                    BIN = re.search(r'\d{15,16}', m)[0][:6]
-                    r = await http.get(f'https://bins.ws/search?bins={BIN}')
-                    soup = bs(r, features='html.parser')
-                    k = soup.find("div", {"class": "page"})
-                    MSG = f"""
+                break  # Break loop if bank card entity found
+    if is_cc:
+        try:
+            x = re.findall(r'\d+', m)
+            if len(x) > 10:
+                return
+            BIN = re.search(r'\d{15,16}', m)[0][:6]
+            r = await http.get(f'https://bins.ws/search?bins={BIN}')
+            soup = bs(r, features='html.parser')
+            k = soup.find("div", {"class": "page"})
+            MSG = f"""
 {m}
 
 {k.get_text()[62:]}
 """
-                    await asyncio.sleep(3)
-                    await Ubot.send_message(DUMP_ID, MSG)
-                except errors.FloodWaitError as e:
-                    print(f'flood wait: {e.seconds}')
-                    await asyncio.sleep(e.seconds)
-                    await Ubot.send_message(DUMP_ID, MSG)
+            await asyncio.sleep(3)  # Wait before forwarding
+            await Ubot.send_message(DUMP_ID, MSG)  # Replace DUMP_ID with your dump channel ID
+        except errors.FloodWaitError as e:
+            print(f'flood wait: {e.seconds}')
+            await asyncio.sleep(e.seconds)
+            await Ubot.send_message(DUMP_ID, MSG)  # Replace DUMP_ID with your dump channel ID
