@@ -85,7 +85,7 @@ async def check_incoming_messages(event):
     except errors.MessageIdInvalidError:
         return  # Message was deleted, no further action needed
 
-    entities = message.entities
+    entities = event.message.entities
     prefixes = ['?', '/', '.', '!']
     m = message.message
     if m.startswith(tuple(prefixes)) or len(m) < 25 or message.is_private or len(m) > 600:
