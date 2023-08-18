@@ -85,14 +85,13 @@ async def check_incoming_messages(event):
     except errors.MessageIdInvalidError:
         return  # Message was deleted, no further action needed
 
-    entities = event.message.entities
     prefixes = ['?', '/', '.', '!']
-    m = message.message
-    if m.startswith(tuple(prefixes)) or len(m) < 25 or message.is_private or len(m) > 600:
+    m = event.message.message  # Corrected line
+    if m.startswith(tuple(prefixes)) or len(m) < 25 or event.is_private or len(m) > 600:
         return
     is_cc = False
-    if entities:
-        for entity in entities:
+    if event.message.entities:  # Corrected line
+        for entity in event.message.entities:  # Corrected line
             if isinstance(entity, types.MessageEntityBankCard):
                 is_cc = True
                 break  # Break loop if bank card entity found
@@ -115,4 +114,4 @@ async def check_incoming_messages(event):
         except errors.FloodWaitError as e:
             print(f'flood wait: {e.seconds}')
             await asyncio.sleep(e.seconds)
-            await Ubot.send_message(DUMP_ID, MSG)
+            await Ubot.send_message(DUMP_ID, MSG)  # Replace DUMP_ID with your dump channel ID
