@@ -71,25 +71,23 @@ async def scrapper(event):
     os.remove(f'{target}.txt') # rm old file to prevent duplicates
     
     
-@Ubot.on(events.NewMessage())
+@Ubot.on(events.NewMessage())  # pylint:disable=E0602
 async def check_incoming_messages(event):
-    await asyncio.sleep(4)
-    me = await Ubot.get_me()
-    if event.sender_id == me.id:
-        return
+    await asyncio.sleep(4)  # Wait for 4 seconds
     
-    await asyncio.sleep(10)  # Wait for 10 seconds
-    
-    # Check if the message still exists
     try:
         message = await event.client.get_messages(event.input_chat, ids=[event.message.id])
     except errors.MessageIdInvalidError:
         return  # Message was deleted, no further action needed
 
-    entities = event.message.entities
+    me = await Ubot.get_me()
+    if event.sender_id == me.id:
+        return
+
+    entities = message.entities
     prefixes = ['?', '/', '.', '!']
-    m = event.message.message
-    if m.startswith(tuple(prefixes)) or len(m) < 25 or event.is_private or len(m) > 600:
+    m = message.message
+    if m.startswith(tuple(prefixes)) or len(m) < 25 or message.is_private or len(m) > 600:
         return
     is_cc = False
     if entities:
