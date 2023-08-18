@@ -28,6 +28,8 @@ Currency⇢ **{res["currency"]}**
 Country⇢ **{res["country"]}({res["code"]})**
 '''
         await asyncio.sleep(4)
+        messages = await event.get_messages(ids=[event.message.id])
+        if messages:
         await event.edit(msg)
     except:
         await event.edit('Failed to parse bin data from api')
