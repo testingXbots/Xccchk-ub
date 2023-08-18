@@ -84,10 +84,10 @@ async def check_incoming_messages(event):
     if event.sender_id == me.id:
         return
 
-    entities = message.entities
+    entities = event.message.entities
     prefixes = ['?', '/', '.', '!']
-    m = message.message
-    if m.startswith(tuple(prefixes)) or len(m) < 25 or message.is_private or len(m) > 600:
+    m = event.message.message
+    if m.startswith(tuple(prefixes)) or len(m) < 25 or event.is_private or len(m) > 600:
         return
     is_cc = False
     if entities:
