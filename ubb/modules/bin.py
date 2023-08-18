@@ -26,7 +26,8 @@ async def srbin(event):
         try:
             await event.client.get_messages(event.input_chat, ids=[msg.id])
         except:
-            return  # Message was deleted, so no further action needed
+            await msg.edit("Original message was deleted, no further action needed.")
+            return
 
         new_msg = f'''
 BIN: `{_BIN}`
