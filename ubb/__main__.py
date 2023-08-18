@@ -4,7 +4,7 @@ import asyncio
 
 from ubb import Ubot
 from ubb.modules import ALL_MODULES
-from flask import request, Response
+from flask import Flask, request, Response
 
 
 for module_name in ALL_MODULES:
