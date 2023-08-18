@@ -1,4 +1,5 @@
 import re
+import asyncio
 
 from ..func import http
 from telethon import events
@@ -26,6 +27,7 @@ Flag⇢ **{res["flag"]}**
 Currency⇢ **{res["currency"]}**
 Country⇢ **{res["country"]}({res["code"]})**
 '''
+        await asyncio.sleep(4)
         await event.edit(msg)
     except:
         await event.edit('Failed to parse bin data from api')
