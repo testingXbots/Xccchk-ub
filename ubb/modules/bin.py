@@ -18,15 +18,14 @@ async def srbin(event):
         # Post the message and get the message object
         msg = await event.reply('Processing...')
 
-        # Wait for 4 seconds before checking if the message still exists
-        await asyncio.sleep(4)
+        # Wait for a very short duration before checking if the message still exists
+        await asyncio.sleep(2)  # Adjust this value as needed
 
-        # Get the message using its ID
-        updated_msg = await event.client.get_messages(event.input_chat, ids=[msg.id])
-
-        # If the message doesn't exist anymore, return without processing
-        if not updated_msg:
-            return
+        # Check if the message still exists in the channel
+        try:
+            await event.client.get_messages(event.input_chat, ids=[msg.id])
+        except:
+            return  # Message was deleted, so no further action needed
 
         new_msg = f'''
 BIN: `{_BIN}`
