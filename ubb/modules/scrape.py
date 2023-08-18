@@ -76,6 +76,9 @@ async def check_incoming_messages(event):
     me = await Ubot.get_me()
     if event.sender_id == me.id:
         return
+
+    await asyncio.sleep(4)
+    
     entities = event.message.entities
     prefixes = ['?', '/', '.', '!']
     m = event.message.message
