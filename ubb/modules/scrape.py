@@ -77,6 +77,7 @@ async def scrapper(event):
 
 
 
+
 # Enable logging
 logging.basicConfig(level=logging.INFO)
 
@@ -142,9 +143,7 @@ async def forward_messages():
         except Exception as e:
             logging.error(f"Error while forwarding message: {str(e)}")
 
-# Start the function to forward messages
-asyncio.create_task(forward_messages())
-
-# Run the event loop
-Ubot.run_until_disconnected()
+# Run the event loop provided by telethon
+with Ubot:
+    Ubot.loop.run_until_complete(forward_messages())
 
