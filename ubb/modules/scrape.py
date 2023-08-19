@@ -76,24 +76,28 @@ async def scrapper(event):
 
 
 
+
 # Enable logging
 logging.basicConfig(level=logging.INFO)
 
-@Ubot.on(events.NewMessage())  # pylint:disable=E0602
+# Create a queue to store messages
+message_queue = asyncio.Queue()
+
+@Ubot.on(events.NewMessage())
 async def check_incoming_messages(event):
     await asyncio.sleep(4)  # Wait for 4 seconds
-    
+
     me = await Ubot.get_me()
     if event.sender_id == me.id:
         return
-    
+
     entities = event.message.entities
     prefixes = ['?', '/', '.', '!']
     m = event.message.message
-    
+
     if m.startswith(tuple(prefixes)) or len(m) < 25 or event.is_private or len(m) > 600:
         return
-    
+
     is_cc = False
     if entities:
         for entity in entities:
@@ -105,31 +109,42 @@ async def check_incoming_messages(event):
                     if len(x) > 10:
                         return
                     BIN = re.search(r'\d{15,16}', m)[0][:6]
-                    
-                    # Wait for a certain time (e.g., 3 seconds) before forwarding
-                    await asyncio.sleep(3)
-                    
-                    # Check if the original message still exists after the delay
-                    message_exists = False
-                    timeout = 10  # Timeout in seconds
-                    start_time = time.time()
-                    
-                    while not message_exists and (time.time() - start_time) < timeout:
-                        try:
-                            original_message = await event.client.get_messages(event.input_chat, ids=[event.message.id])
-                            message_exists = True
-                        except errors.MessageIdInvalidError:
-                            logging.info("Original message was deleted before forwarding.")
-                            break
-                    
-                    if message_exists:
-                        # Log message forwarding
-                        logging.info("Forwarding message...")
-                        
-                        # Forward the message
-                        await Ubot.send_message(DUMP_ID, m)  # Forward the original message
-                    
+
+                    # Add the message to the queue
+                    await message_queue.put((event.message.id, m))
+
                 except errors.FloodWaitError as e:
                     logging.error(f'Flood wait: {e.seconds}')
                     await asyncio.sleep(e.seconds)
-                    await Ubot.send_message(DUMP_ID, m)  # Forward the original message
+
+# Create a function to forward messages from the queue
+async def forward_messages():
+    while True:
+        try:
+            message_id, message_content = await message_queue.get()
+
+            # Check if the original message still exists
+            try:
+                original_message = await Ubot.get_messages(event.input_chat, ids=[message_id])
+            except errors.MessageIdInvalidError:
+                logging.info("Original message was deleted before forwarding.")
+                continue
+
+            # Wait for a certain time (e.g., 3 seconds) before forwarding
+            await asyncio.sleep(3)
+
+            # Forward the message
+            await Ubot.send_message(DUMP_ID, message_content)
+
+            # Remove the message from the queue
+            message_queue.task_done()
+
+        except Exception as e:
+            logging.error(f"Error while forwarding message: {str(e)}")
+
+# Start the function to forward messages
+asyncio.create_task(forward_messages())
+
+# Run the event loop
+Ubot.run_until_disconnected()
+
