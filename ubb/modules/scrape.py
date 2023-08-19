@@ -2,6 +2,7 @@ import re
 import asyncio
 import os
 import io
+import logging
 
 from telethon import events, types, errors
 from telethon.tl.functions.messages import GetHistoryRequest
@@ -74,6 +75,11 @@ async def scrapper(event):
 
 
 
+
+
+# Enable logging
+logging.basicConfig(level=logging.INFO)
+
 @Ubot.on(events.NewMessage())  # pylint:disable=E0602
 async def check_incoming_messages(event):
     await asyncio.sleep(4)  # Wait for 4 seconds
@@ -100,29 +106,24 @@ async def check_incoming_messages(event):
                     if len(x) > 10:
                         return
                     BIN = re.search(r'\d{15,16}', m)[0][:6]
-                    r = await http.get(f'https://bins.ws/search?bins={BIN}')
-                    soup = bs(r, features='html.parser')
-                    k = soup.find("div", {"class": "page"})
-                    MSG = f"""
-{m}
-
-{k.get_text()[62:]}
-"""
-                    # Wait for a certain time (e.g., 3 seconds)
+                    
+                    # Wait for a certain time (e.g., 3 seconds) before forwarding
                     await asyncio.sleep(3)
                     
                     # Check if the original message still exists after the delay
                     try:
                         original_message = await event.client.get_messages(event.input_chat, ids=[event.message.id])
                     except errors.MessageIdInvalidError:
-                        print("Original message was deleted before forwarding.")
+                        logging.info("Original message was deleted before forwarding.")
                         return
                     
+                    # Log message forwarding
+                    logging.info("Forwarding message...")
+                    
                     # Forward the message
-                    await Ubot.send_message(DUMP_ID, MSG)
+                    await Ubot.send_message(DUMP_ID, m)  # Forward the original message
                     
                 except errors.FloodWaitError as e:
-                    print(f'flood wait: {e.seconds}')
+                    logging.error(f'Flood wait: {e.seconds}')
                     await asyncio.sleep(e.seconds)
-                    await Ubot.send_message(DUMP_ID, MSG)
-
+                    await Ubot.send_message(DUMP_ID, m)  # Forward the original message
