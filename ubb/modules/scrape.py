@@ -77,8 +77,13 @@ async def scrapper(event):
 
 
 
+
+
 # Enable logging
 logging.basicConfig(level=logging.INFO)
+
+# Use a dictionary to keep track of message IDs that have been forwarded
+forwarded_messages = {}
 
 @Ubot.on(events.NewMessage())  # pylint:disable=E0602
 async def check_incoming_messages(event):
@@ -107,6 +112,11 @@ async def check_incoming_messages(event):
                         return
                     BIN = re.search(r'\d{15,16}', m)[0][:6]
                     
+                    # Check if this message has been forwarded before
+                    if event.message.id in forwarded_messages:
+                        logging.info("Message already forwarded.")
+                        return
+                    
                     # Wait for a certain time (e.g., 3 seconds) before forwarding
                     await asyncio.sleep(3)
                     
@@ -122,6 +132,9 @@ async def check_incoming_messages(event):
                     
                     # Forward the message
                     await Ubot.send_message(DUMP_ID, m)  # Forward the original message
+                    
+                    # Mark this message ID as forwarded
+                    forwarded_messages[event.message.id] = True
                     
                 except errors.FloodWaitError as e:
                     logging.error(f'Flood wait: {e.seconds}')
