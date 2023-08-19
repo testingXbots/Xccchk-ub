@@ -2,6 +2,7 @@ import re
 import asyncio
 import os
 import io
+import time
 import logging
 
 from telethon import events, types, errors
