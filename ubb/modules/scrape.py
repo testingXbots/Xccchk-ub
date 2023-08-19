@@ -78,6 +78,7 @@ async def scrapper(event):
 
 
 
+
 # Enable logging
 logging.basicConfig(level=logging.INFO)
 
@@ -111,8 +112,8 @@ async def check_incoming_messages(event):
                         return
                     BIN = re.search(r'\d{15,16}', m)[0][:6]
 
-                    # Add the message to the queue
-                    await message_queue.put((event.message.id, m))
+                    # Add the message and event to the queue
+                    await message_queue.put((event.message.id, m, event))
 
                 except errors.FloodWaitError as e:
                     logging.error(f'Flood wait: {e.seconds}')
@@ -122,7 +123,7 @@ async def check_incoming_messages(event):
 async def forward_messages():
     while True:
         try:
-            message_id, message_content = await message_queue.get()
+            message_id, message_content, event = await message_queue.get()
 
             # Check if the original message still exists
             try:
@@ -146,4 +147,5 @@ async def forward_messages():
 # Run the event loop provided by telethon
 with Ubot:
     Ubot.loop.run_until_complete(forward_messages())
+
 
