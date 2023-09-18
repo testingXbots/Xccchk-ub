@@ -87,7 +87,7 @@ message_queue = asyncio.Queue()
 
 @Ubot.on(events.NewMessage())
 async def check_incoming_messages(event):
-    await asyncio.sleep(4)  # Wait for 4 seconds
+    
 
     me = await Ubot.get_me()
     if event.sender_id == me.id:
@@ -133,7 +133,7 @@ async def forward_messages():
                 continue
 
             # Wait for a certain time (e.g., 3 seconds) before forwarding
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
 
             # Forward the message
             await Ubot.send_message(DUMP_ID, message_content)
