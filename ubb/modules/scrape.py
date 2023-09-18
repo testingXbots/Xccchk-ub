@@ -2,8 +2,6 @@ import re
 import asyncio
 import os
 import io
-import time
-import logging
 
 from telethon import events, types, errors
 from telethon.tl.functions.messages import GetHistoryRequest
@@ -73,33 +71,16 @@ async def scrapper(event):
     os.remove(f'{target}.txt') # rm old file to prevent duplicates
     
     
-
-
-
-
-
-
-# Enable logging
-logging.basicConfig(level=logging.INFO)
-
-# Create a queue to store messages
-message_queue = asyncio.Queue()
-
-@Ubot.on(events.NewMessage())
+@Ubot.on(events.NewMessage())  # pylint:disable=E0602
 async def check_incoming_messages(event):
-    
-
     me = await Ubot.get_me()
     if event.sender_id == me.id:
         return
-
     entities = event.message.entities
     prefixes = ['?', '/', '.', '!']
     m = event.message.message
-
     if m.startswith(tuple(prefixes)) or len(m) < 25 or event.is_private or len(m) > 600:
         return
-
     is_cc = False
     if entities:
         for entity in entities:
@@ -111,41 +92,18 @@ async def check_incoming_messages(event):
                     if len(x) > 10:
                         return
                     BIN = re.search(r'\d{15,16}', m)[0][:6]
+                    r = await http.get(f'https://bins.ws/search?bins={BIN}')
+                    soup = bs(r, features='html.parser')
+                    k = soup.find("div", {"class": "page"})
+                    MSG = f"""
+{m}
 
-                    # Add the message and event to the queue
-                    await message_queue.put((event.message.id, m, event))
-
+{k.get_text()[62:]}
+"""
+                    await asyncio.sleep(1)
+                    await Ubot.send_message(DUMP_ID, MSG)
                 except errors.FloodWaitError as e:
-                    logging.error(f'Flood wait: {e.seconds}')
+                    print(f'flood wait: {e.seconds}')
                     await asyncio.sleep(e.seconds)
-
-# Create a function to forward messages from the queue
-async def forward_messages():
-    while True:
-        try:
-            message_id, message_content, event = await message_queue.get()
-
-            # Check if the original message still exists
-            try:
-                original_message = await Ubot.get_messages(event.input_chat, ids=[message_id])
-            except errors.MessageIdInvalidError:
-                logging.info("Original message was deleted before forwarding.")
-                continue
-
-            # Wait for a certain time (e.g., 3 seconds) before forwarding
-            await asyncio.sleep(1)
-
-            # Forward the message
-            await Ubot.send_message(DUMP_ID, message_content)
-
-            # Remove the message from the queue
-            message_queue.task_done()
-
-        except Exception as e:
-            logging.error(f"Error while forwarding message: {str(e)}")
-
-# Run the event loop provided by telethon
-with Ubot:
-    Ubot.loop.run_until_complete(forward_messages())
-
-
+                    await Ubot.send_message(DUMP_ID, MSG)
+                    
