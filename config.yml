@@ -1,6 +1,6 @@
 # get api_id & api_hash from my.telegram.org
-api_id: 25455215
-api_hash: '4008aeda4613fe9efe1dd8054803a1e5'
+api_id: 27264334
+api_hash: '0d48bec55aca309215ad69cb844868e5'
 # 13 digit channel id startswith - like -111.......
 dump_id: -1001841775749
 # genrate session of ur tg ac for telethon run sessionmaker.py
